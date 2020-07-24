@@ -1,0 +1,576 @@
+#include<iostream> 
+#include<QMainWindow>
+#include<QApplication>
+#include<QHBoxLayout>
+#include<QWidget>
+#include<QLabel>
+#include<QVBoxLayout>
+#include<QDebug>
+#include<QPainter>
+#include<qmath.h>
+#include<QBasicTimer>
+#include<QTimerEvent>
+#include<QPixmap>
+
+const int respwave[]=
+{
+  0x0f, 0x10, 0x10, 0x11, 0x12, 0x12, 0x12, 0x13, 0x13,
+  0x14, 0x14, 0x14, 0x14, 0x15, 0x17, 0x17, 0x17, 0x18,
+  0x18, 0x19, 0x19, 0x19, 0x19, 0x1a, 0x19, 0x1a, 0x1a,
+  0x1b, 0x1b, 0x1b, 0x1c, 0x1c, 0x1b, 0x1b, 0x1a, 0x1a,
+  0x1a, 0x19, 0x19, 0x18, 0x18, 0x18, 0x17, 0x17, 0x15,
+  0x15, 0x15, 0x14, 0x15, 0x14, 0x14, 0x14, 0x15, 0x15,
+  0x14, 0x14, 0x15, 0x14, 0x14, 0x14, 0x15, 0x17, 0x17,
+  0x17, 0x17, 0x18, 0x18, 0x19, 0x19, 0x19, 0x1a, 0x1b,
+  0x1c, 0x1d, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x24,
+  0x24, 0x26, 0x26, 0x26, 0x26, 0x24, 0x23, 0x23, 0x23,
+  0x23, 0x22, 0x21, 0x20, 0x1d, 0x1d, 0x1c, 0x1c, 0x1c,
+  0x1c, 0x1c, 0x1c, 0x1c, 0x1b, 0x1c, 0x1b, 0x1a, 0x1a,
+  0x19, 0x18, 0x17, 0x15, 0x14, 0x12, 0x12, 0x11, 0x10,
+  0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f
+};
+
+const int spo2wave[] =
+{
+        0x21,  0x21,  0x22,  0x22,  0x23,  0x22,  0x22,  0x21,  0x21,
+        0x20,  0x20,  0x1f,  0x1e,  0x1d,  0x1c,  0x1b,  0x1b,  0x1a,
+        0x19,  0x18,  0x18,  0x17,  0x16,  0x15,  0x14,  0x13,  0x12,
+        0x11,  0x11,  0x10,  0x10,  0x0f,  0x0f,  0x0e,  0x0d,  0x0c,
+        0x0c,  0x0b,  0x0a,  0x09,  0x09,  0x08,  0x07,  0x06,  0x06,
+        0x05,  0x05,  0x04,  0x04,  0x03,  0x03,  0x02,  0x02,  0x01,
+        0x01,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,
+        0x00,  0x01,  0x03,  0x06,  0x0a,  0x0e,  0x13,  0x18,  0x1d,
+        0x23,  0x28,  0x2d,  0x32,  0x37,  0x3b,  0x40,  0x44,  0x49,
+        0x4d,  0x51,  0x54,  0x57,  0x58,  0x5a,  0x5a,  0x5a,  0x59,
+        0x59,  0x57,  0x55,  0x52,  0x50,  0x4c,  0x49,  0x45,  0x42,
+        0x3e,  0x3b,  0x37,  0x34,  0x31,  0x2f,  0x2c,  0x29,  0x26,
+        0x24,  0x22,  0x20,  0x1f,  0x1f,  0x1e,  0x1e,  0x1d,  0x1d,
+        0x1e,  0x1f,  0x20,  0x21,  0x21,  0x22,  0x22,  0x23,  0x22,
+        0x22,  0x21,  0x21,  0x20,  0x20,  0x1f,  0x1e,  0x1d,  0x1c,
+        0x1b,  0x1b,  0x1a,  0x19,  0x18,  0x18,  0x17,  0x16,  0x15,
+        0x14,  0x13,  0x12,  0x11,  0x11,  0x10,  0x10,  0x0f,  0x0f,
+        0x0e,  0x0d,  0x0c,  0x0c,  0x0b,  0x0a,  0x09,  0x09,  0x08,
+        0x07,  0x06,  0x06,  0x05,  0x05,  0x04,  0x04,  0x03,  0x03,
+        0x02,  0x02,  0x01,  0x01,  0x00,  0x00,  0x00,  0x00,  0x00,
+        0x00,  0x00,  0x00,  0x00,  0x01,  0x03,  0x06,  0x0a,  0x0e,
+        0x13,  0x18,  0x1d,  0x23,  0x28,  0x2d,  0x32,  0x37,  0x3b,
+        0x40,  0x44,  0x49,  0x4d,  0x51,  0x54,  0x57,  0x58,  0x5a,
+        0x5a,  0x5a,  0x59,  0x59,  0x57,  0x55,  0x52,  0x50,  0x4c,
+        0x49,  0x45,  0x42,  0x3e,  0x3b,  0x37,  0x34,  0x31,  0x2f,
+        0x2c,  0x29,  0x26,  0x24,  0x22,  0x20,  0x1f,  0x1f,  0x1e,
+        0x1e,  0x1d,  0x1d,  0x1e,  0x1f,  0x20,  0x21,  0x21,  0x22,
+        0x22,  0x23,  0x22,  0x22,  0x21,  0x22,  0x21
+};
+
+const int ecgWave[] = {2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2008, 2016, 2016, 2016, 2024, 2032, 2048,
+        2064, 2064, 2064, 2072, 2080, 2080, 2080, 2088, 2096, 2104,
+        2112, 2112, 2112, 2112, 2112, 2112, 2104, 2096, 2088,
+        2080, 2080, 2080, 2072, 2064, 2064, 2064, 2048, 2032, 2032,
+        2032, 2016, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 1992, 1984, 1976,
+        1968, 1960, 1952, 1944, 1936, 1944, 1952, 2016, 2080, 2136,
+        2192, 2256, 2320, 2376, 2432, 2488, 2544, 2568, 2592, 2536,
+        2480, 2424, 2368, 2304, 2240, 2184, 2128, 2072, 2016, 1968,
+        1920, 1928, 1936, 1944, 1952, 1960, 1968, 1984, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2008, 2016, 2024, 2032, 2032,
+        2032, 2048, 2064, 2064, 2064, 2072, 2080, 2088, 2096, 2104,
+        2112, 2112, 2112, 2120, 2128, 2136, 2144, 2152, 2160, 2160,
+        2160, 2160, 2160, 2168, 2176, 2176, 2176, 2184, 2192,
+        2192, 2192, 2192, 2200, 2208, 2208, 2208, 2208, 2208, 2208,
+        2208, 2200, 2192, 2192, 2192, 2184, 2176, 2176, 2176, 2168,
+        2160, 2160, 2160, 2144, 2128, 2128, 2128, 2128, 2128, 2112,
+        2096, 2088, 2080, 2072, 2064, 2064, 2064, 2048, 2032, 2024,
+        2016, 2016, 2016, 2008, 2000, 2000, 2000, 2000, 2000,
+        2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000};
+
+class QWidgetDraw:public QWidget
+{
+public:
+    int ecgDataIndex;
+    int y0;
+    qreal index;
+    QPixmap * pixmap;
+    QWidgetDraw(QWidget*parent=0):QWidget(parent)
+	{
+     QBasicTimer *timer=new QBasicTimer();
+     timer->start(10,this);
+     pixmap=new QPixmap(this->width(),this->height());
+     pixmap->fill(Qt::black);
+     index=0;
+     y0=0;
+     ecgDataIndex=0;
+	}
+virtual void timerEvent(QTimerEvent * event)
+    {
+    QPainter pixPainter;
+    pixPainter.begin(this->pixmap);
+    drawEcgWave(&pixPainter);
+    pixPainter.end();
+    this->update();
+    }
+virtual void paintEvent(QPaintEvent *event)
+    {
+    QPainter * painter=new QPainter();
+    painter->begin(this);
+    painter->drawPixmap(0,0,* pixmap);
+    painter->end();
+    }
+void drawEcgWave(QPainter * painter)
+    {
+      QPen pen;
+      pen.setWidth(2);
+      pen.setColor(QColor("#F40002"));
+      painter->setPen(pen);
+      painter->save();
+      pen.setColor(QColor("#212121"));
+      painter->setPen(pen);
+      painter->drawLine(index,0,index,height());
+      painter->restore();
+      qreal height=this->height();
+      qreal value=ecgWave[ecgDataIndex];
+      qreal v0=ecgWave[ecgDataIndex-5];
+      int y=round(height*2/3-((value-2048)/600)*height/2);
+      y0=round(height*2/3-((v0-2048)/600)*height/2);
+      painter->drawPoint(index,y);
+      pen.setColor(Qt::green);
+      painter->setPen(pen);
+      //qDebug()<<index<<y<<index+1<<y0;
+      if(ecgDataIndex>4)
+      	painter->drawLine(index,y,index-1,y0);
+      else
+      	painter->drawLine(index,y,index,y);
+      	index=index+1;
+      if(index>width())
+          index=0;
+      ecgDataIndex=ecgDataIndex+5;
+      if(ecgDataIndex > 494)
+          ecgDataIndex = 0;
+	return;
+    }
+};
+class QWidgetDraw1:public QWidget
+{
+public:
+    int spo2DataIndex;
+    qreal index1;
+    QPixmap * pixmap1;
+    QWidgetDraw1(QWidget*parent=0):QWidget(parent)
+    {
+     QBasicTimer *timer=new QBasicTimer();
+     timer->start(10,this);
+     pixmap1=new QPixmap(this->width(),this->height());
+     pixmap1->fill(Qt::black);
+     index1=0;
+     spo2DataIndex=0;
+    }
+virtual void timerEvent(QTimerEvent * event)
+    {
+      QPainter pixPainter1;
+      pixPainter1.begin(this->pixmap1);
+      drawspo2Wave(&pixPainter1);
+      pixPainter1.end();
+      this->update();
+    }
+virtual void paintEvent(QPaintEvent *event)
+    {
+    QPainter * painter1=new QPainter();
+    painter1->begin(this);
+    painter1->drawPixmap(0,0,* pixmap1);
+    painter1->end();
+    }
+void drawspo2Wave(QPainter * painter)
+  {
+      QPen pen;
+      pen.setWidth(2);
+      pen.setColor(QColor("#F40002"));
+      painter->setPen(pen);
+      painter->save();
+      pen.setColor(QColor("#212121"));
+      painter->setPen(pen);
+      painter->drawLine(index1,0,index1,height());
+      painter->restore();
+      qreal height1=this->height();
+      qreal v1=spo2wave[spo2DataIndex];
+      qreal v10=spo2wave[spo2DataIndex-2];
+      int y1=round(height1-10-(v1/90)*height1*2/3);
+      int y10=round(height1-10-(v10/90)*height1*2/3);
+      painter->drawPoint(index1,y1);
+      pen.setColor(Qt::red);
+      painter->setPen(pen);
+     if(spo2DataIndex>4)
+      painter->drawLine(index1,y1,index1-1,y10);
+     else
+      painter->drawLine(index1,y1,index1,y1);
+      index1=index1+1;
+      if(index1>width())
+          index1=0;
+      spo2DataIndex=spo2DataIndex+2;
+      if(spo2DataIndex >248)
+          spo2DataIndex = 0;
+    return;
+    }
+};
+
+class QWidgetDraw2:public QWidget
+{
+public:
+    int respDataIndex;
+    qreal index2;
+    QPixmap * pixmap2;
+    QWidgetDraw2(QWidget*parent=0):QWidget(parent)
+    {
+     QBasicTimer *timer=new QBasicTimer();
+     timer->start(10,this);
+     pixmap2=new QPixmap(this->width(),this->height());
+     pixmap2->fill(Qt::black);
+     index2=0;
+     respDataIndex=0;
+    }
+virtual void timerEvent(QTimerEvent * event)
+  {
+      QPainter pixPainter2;
+      pixPainter2.begin(this->pixmap2);
+      drawrespWave(&pixPainter2);
+      pixPainter2.end();
+      this->update();
+  }
+virtual void paintEvent(QPaintEvent *event)
+  {
+    QPainter * painter2=new QPainter();
+    painter2->begin(this);
+    painter2->drawPixmap(0,0,* pixmap2);
+    painter2->end();
+    }
+void drawrespWave(QPainter * painter)
+  {
+      QPen pen;
+      pen.setWidth(2);
+      pen.setColor(QColor("#F40002"));
+      painter->setPen(pen);
+      painter->save();
+      pen.setColor(QColor("#212121"));
+      painter->setPen(pen);
+      painter->drawLine(index2,0,index2,height());
+      painter->restore();
+      qreal height2=this->height();
+      qreal v2=respwave[respDataIndex];
+      qreal v20=respwave[respDataIndex-1];
+      int y2=round(height2-10-(v2/30)*height2*2/3);
+      int y20=round(height2-10-(v20/30)*height2*2/3);
+      painter->drawPoint(index2,y2);
+      pen.setColor(Qt::green);
+      painter->setPen(pen);
+      //qDebug()<<index2<<y2<<index2+1<<y20;
+     if(respDataIndex>2)
+      painter->drawLine(index2,y2,index2-1,y20);
+     else
+      painter->drawLine(index2,y2,index2,y2);
+      index2=index2+1;
+      if(index2>width())
+          index2=0;
+      respDataIndex=respDataIndex+1;
+      if(respDataIndex > 123)
+          respDataIndex = 0;
+	return;
+  }
+};
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    QLabel * mt=new QLabel();
+    mt->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    mt->setText("浜戠洃鎶や华");
+    //QWidget * l1=new QWidget();
+    QWidgetDraw* l1 = new QWidgetDraw();
+    l1->setStyleSheet("background-color:rgb(33,33,33)");
+    QWidgetDraw1* l2 = new QWidgetDraw1();
+    l2->setStyleSheet("background-color:rgb(33,33,33)");
+    QWidgetDraw2 * l3=new QWidgetDraw2();
+    l3->setStyleSheet("background-color:rgb(33,33,33)");
+    QLabel * h811=new QLabel();
+    h811->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:white");
+    h811->setText("ECG2");
+    QLabel * h812=new QLabel();
+    h812->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:white");
+    h812->setText("SPO2");
+    QLabel * h813=new QLabel();
+    h813->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:white");
+    h813->setText("RESP");
+//    QVBoxLayout * h81=new QVBoxLayout();
+//    h81->addWidget(h11);
+//    h81->addLayout(h12);
+//    h81->setStretch(0,1);
+//    h81->setStretch(1,5);
+    QVBoxLayout * wave=new QVBoxLayout();
+    wave->addWidget(h811);
+    wave->addWidget(l1);
+    wave->addWidget(h812);
+    wave->addWidget(l2);
+    wave->addWidget(h813);
+    wave->addWidget(l3);
+    wave->setStretch(0,1);
+    wave->setStretch(1,5);
+    wave->setStretch(2,1);
+    wave->setStretch(3,5);
+    wave->setStretch(4,1);
+    wave->setStretch(5,5);
+    QLabel * h11=new QLabel();
+    h11->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    h11->setText("HR");
+    QLabel * h121=new QLabel();
+    h121->setStyleSheet("font:60px;background-color:rgb(33,33,33);color:green");
+    h121->setText(" 80");
+    QLabel * h122=new QLabel();
+    h122->setStyleSheet("position:center;font:15px;background-color:rgb(33,33,33);color:rgb(4,145,20)");
+    h122->setText("  bpm\n\n\n\n\n");
+    QHBoxLayout * h12=new QHBoxLayout();
+    h12->addWidget(h121);
+    h12->addWidget(h122);
+    h12->setStretch(0,2);
+    h12->setStretch(1,1);
+//    QWidget * h12=new QWidget();
+//    h12->setStyleSheet("background-color:rgb(200,200,100)");
+    QVBoxLayout * h1=new QVBoxLayout();
+    h1->addWidget(h11);
+    h1->addLayout(h12);
+    h1->setStretch(0,1);
+    h1->setStretch(1,5);
+    QLabel * h21=new QLabel();
+    h21->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    h21->setText("ST");
+    QLabel * h22=new QLabel();
+    h22->setStyleSheet("position:center;font:20px;background-color:rgb(33,33,33);color:rgb(28,183,39)");
+    h22->setText("   ST1:_?_\n   ST2:_?_\n   PVCS:_?_");
+    QVBoxLayout * h2=new QVBoxLayout();
+    h2->addWidget(h21);
+    h2->addWidget(h22);
+    h2->setStretch(0,1);
+    h2->setStretch(1,5);
+    QLabel * h31=new QLabel();
+    h31->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    h31->setText("NIBP");
+    QLabel * h321=new QLabel();
+    h321->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:rgb(76,139,180)");
+    h321->setText("      00.00.00                 mmHg");
+    QLabel * h3221=new QLabel();
+    h3221->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:rgb(76,139,180)");
+    h3221->setText("_?_  ");
+    QLabel * h3222=new QLabel();
+    h3222->setStyleSheet("font:50px;background-color:rgb(33,33,33);color:rgb(76,139,180)");
+    h3222->setText("/_?_");
+    QLabel * h3223=new QLabel();
+    h3223->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:rgb(76,139,180)");
+    h3223->setText("         _?_");
+    QHBoxLayout * h322=new QHBoxLayout();
+    h322->addWidget(h3221);
+    h322->addWidget(h3222);
+    h322->addWidget(h3223);
+    h322->setStretch(0,3);
+    h322->setStretch(1,4);
+    h322->setStretch(2,7);
+//    QLabel * h322=new QLabel();
+//    h322->setStyleSheet("font:55px;background-color:rgb(33,33,33);color:green");
+//    h322->setText("   _?_");
+    QLabel * h323=new QLabel();
+    h323->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:green");
+    h323->setText("  ");
+    QVBoxLayout * h32=new QVBoxLayout();
+    h32->addWidget(h321);
+    h32->addLayout(h322);
+    h32->addWidget(h323);
+    h32->setStretch(0,1);
+    h32->setStretch(1,3);
+    h32->setStretch(2,1);
+//    QWidget * h32=new QWidget();
+//    h32->setStyleSheet("background-color:rgb(100,200,200)");
+    QVBoxLayout * h3=new QVBoxLayout();
+    h3->addWidget(h31);
+    h3->addLayout(h32);
+    h3->setStretch(0,1);
+    h3->setStretch(1,5);
+    QLabel * h41=new QLabel();
+    h41->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    h41->setText("SPO2");
+    QLabel * h4211=new QLabel();
+    h4211->setStyleSheet("font:50px;background-color:rgb(33,33,33);color:rgb(239,29,9)");
+    h4211->setText("  98");
+    QLabel * h4212=new QLabel();
+    h4212->setStyleSheet("position:center;font:25px;background-color:rgb(33,33,33);color:rgb(165,18,21)");
+    h4212->setText("     88");
+    QVBoxLayout * h421=new QVBoxLayout();
+    h421->addWidget(h4211);
+    h421->addWidget(h4212);
+    h421->setStretch(0,4);
+    h421->setStretch(1,1);
+//    QLabel * h421=new QLabel();
+//    h421->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:green");
+//    h421->setText("88");
+    QLabel * h422=new QLabel();
+    h422->setStyleSheet("position:center;font:18px;background-color:rgb(33,33,33);color:rgb(97,37,35)");
+    h422->setText("\n    %\n\n    bmp");
+    QHBoxLayout * h42=new QHBoxLayout();
+    h42->addLayout(h421);
+    h42->addWidget(h422);
+    h42->setStretch(0,2);
+    h42->setStretch(1,1);
+//    QWidget * h42=new QWidget();
+//    h42->setStyleSheet("background-color:rgb(200,100,100)");
+    QVBoxLayout * h4=new QVBoxLayout();
+    h4->addWidget(h41);
+    h4->addLayout(h42);
+    h4->setStretch(0,1);
+    h4->setStretch(1,5);
+    QLabel * h51=new QLabel();
+    h51->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    h51->setText("TEMP");
+    QLabel * h521=new QLabel();
+    h521->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:rgb(136,57,156)");
+    h521->setText(" T1:_?_\n T2:_?_");
+    QLabel * h522=new QLabel();
+    h522->setStyleSheet("position:center;font:20px;background-color:rgb(33,33,33);color:rgb(136,57,156)");
+    h522->setText("       掳C\n\n  TD:_?_");
+    QHBoxLayout * h52=new QHBoxLayout();
+    h52->addWidget(h521);
+    h52->addWidget(h522);
+    h52->setStretch(0,2);
+    h52->setStretch(1,1);
+//    QWidget * h52=new QWidget();
+//    h52->setStyleSheet("background-color:rgb(48,48,46)");
+    QVBoxLayout * h5=new QVBoxLayout();
+    h5->addWidget(h51);
+    h5->addLayout(h52);
+    h5->setStretch(0,1);
+    h5->setStretch(1,5);
+    QLabel * h61=new QLabel();
+    h61->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    h61->setText("RESP");
+    QLabel * h621=new QLabel();
+    h621->setStyleSheet("font:60px;background-color:rgb(33,33,33);color:rgb(250,209,53)");
+    h621->setText(" 19");
+    QLabel * h622=new QLabel();
+    h622->setStyleSheet("position:center;font:15px;background-color:rgb(33,33,33);color:rgb(250,209,53)");
+    h622->setText("  bpm\n\n\n\n\n");
+    QHBoxLayout * h62=new QHBoxLayout();
+    h62->addWidget(h621);
+    h62->addWidget(h622);
+    h62->setStretch(0,2);
+    h62->setStretch(1,1);
+//    QWidget * h62=new QWidget();
+//    h62->setStyleSheet("background-color:rgb(200,200,200)");
+    QVBoxLayout * h6=new QVBoxLayout();
+    h6->addWidget(h61);
+    h6->addLayout(h62);
+    h6->setStretch(0,1);
+    h6->setStretch(1,5);
+    QLabel * h71=new QLabel();
+    h71->setStyleSheet("font:20px;background-color:rgb(48,48,46);color:white");
+    h71->setText("CO2");
+    QLabel * h721=new QLabel();
+    h721->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:rgb(228,212,75)");
+    h721->setText("            mmHg");
+    QLabel * h722=new QLabel();
+    h722->setStyleSheet("font:55px;background-color:rgb(33,33,33);color:rgb(228,212,75)");
+    h722->setText(" _?_");
+    QLabel * h723=new QLabel();
+    h723->setStyleSheet("font:20px;background-color:rgb(33,33,33);color:rgb(228,212,75)");
+    h723->setText("ins_?_   awrr_?_");
+    QVBoxLayout * h72=new QVBoxLayout();
+    h72->addWidget(h721);
+    h72->addWidget(h722);
+    h72->addWidget(h723);
+    h72->setStretch(0,1);
+    h72->setStretch(1,3);
+    h72->setStretch(1,1);
+//    QWidget * h72=new QWidget();
+//    h72->setStyleSheet("background-color:rgb(100,100,200)");
+    QVBoxLayout * h7=new QVBoxLayout();
+    h7->addWidget(h71);
+    h7->addLayout(h72);
+    h7->setStretch(0,1);
+    h7->setStretch(1,5);
+//    QWidget * h3=new QWidget();
+//    h3->setStyleSheet("background-color:rgb(100,200,200)");
+//    QWidget * h4=new QWidget();
+//    h4->setStyleSheet("background-color:rgb(200,100,200)");
+//    QWidget * h5=new QWidget();
+//    h5->setStyleSheet("background-color:rgb(100,200,100)");
+//    QWidget * h6=new QWidget();
+//    h6->setStyleSheet("background-color:rgb(200,200,200)");
+//    QWidget * h7=new QWidget();
+//    h7->setStyleSheet("background-color:rgb(200,200,100)");
+    QHBoxLayout * e1=new QHBoxLayout();
+    e1->addLayout(h1);
+    e1->addLayout(h2);
+    e1->setStretch(0,1);
+    e1->setStretch(1,1);
+    QHBoxLayout * e2=new QHBoxLayout();
+    e2->addLayout(h3);
+    QHBoxLayout * e3=new QHBoxLayout();
+    e3->addLayout(h4);
+    e3->addLayout(h5);
+    e3->setStretch(0,1);
+    e3->setStretch(1,1);
+    QHBoxLayout * e4=new QHBoxLayout();
+    e4->addLayout(h6);
+    e4->addLayout(h7);
+    e4->setStretch(0,1);
+    e4->setStretch(1,1);
+    QVBoxLayout * tb=new QVBoxLayout();
+    tb->addLayout(e1);
+    tb->addLayout(e2);
+    tb->addLayout(e3);
+    tb->addLayout(e4);
+    tb->setStretch(0,1);
+    tb->setStretch(1,1);
+    tb->setStretch(2,1);
+    tb->setStretch(3,1);
+     QHBoxLayout * down=new QHBoxLayout();
+     down->addLayout(wave);
+     down->addLayout(tb);
+     down->setStretch(0,2);
+     down->setStretch(1,1);
+     QVBoxLayout* lmain = new QVBoxLayout();
+     lmain->addWidget(mt);
+     lmain->addLayout(down);
+     lmain->setStretch(0,1);
+     lmain->setStretch(1,10);
+    QWidget* main = new QWidget();
+    main->resize(1000,600);
+    main->setWindowFlags (Qt::FramelessWindowHint);//闅愯棌鏍囬鏍?
+    main->setLayout(lmain);
+    main->setStyleSheet("background-color:rgb(33,33,33)");
+    main->show();//鏂规硶1
+
+    return a.exec();
+}
