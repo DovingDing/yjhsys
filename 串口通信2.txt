@@ -1,0 +1,100 @@
+在本项目中，串口发挥着十分重要的作用，心电模块（mcu）和主控单元（qt界面cpu）之间的数据通信，主控单元和数据库的数据通信都有它的应用。
+由于条件限制，我们不能获得心电模块，只能应用虚拟串口，串口助手，和qt程序来实现虚拟仿真，数据发送功能。
+下面就是功能实现的主要程序，首先我们要创建一个串口对象，配置端口号、波特率等参数后打开串口并读写串口。为了完成不同数据的区分并解决模块间数据交互问题，这里还添加了校验程序，以正确处理数据。
+接下来就是是数据读取，和程序运行的结果。
+#include "mainwindow.h"
+#include <QApplication>
+#include<QWidget>
+#include<QDebug>
+#include<QtSerialPort/QSerialPort>
+#include<QtSerialPort/QSerialPortInfo>
+#include<QTimer>
+
+class QWidgetEcgCom: public QWidget
+{
+public:
+    QSerialPort *com;
+
+    QWidgetEcgCom(QWidget *parent = nullptr) : QWidget(parent)
+    {
+        this->serialInit();
+    }
+    int serialInit(void);
+    void serialRx(void);
+    void rxDataHandle(char data);
+};
+
+int QWidgetEcgCom::serialInit(void)
+{
+    //打印串口信息
+    //foreach:c++里没有
+    //qt自己实现这个关键字，如下会便利aviliablePorts,并把结果依次赋值给info
+    foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
+    {
+        qDebug()<<"name: "<<info.portName();
+        qDebug()<<"description: "<<info.description();
+        qDebug()<<"manufacturer: "<<info.manufacturer();
+        qDebug()<<"serial number: "<<info.serialNumber();
+    }//启动串口模拟器创建串口，应在程序输出位置看到串口数据信息
+
+    //创建串口对象，在头文件中定义了指针
+    com = new QSerialPort;
+    //配置串口
+    com->setPortName("COM1");
+    //尝试打开串口
+    if(!com -> open(QIODevice::ReadWrite))
+    {
+        qDebug("serial open err");
+        return -1;
+    }
+    else
+        qDebug()<<"serial open success"<<com->portName();
+
+    //配置串口参数
+    //baud115200
+    com->setBaudRate(QSerialPort::Baud115200, QSerialPort::AllDirections);
+    //数据位
+    com->setDataBits(QSerialPort::Data8);
+    //流控：无
+    com->setFlowControl(QSerialPort::NoFlowControl);
+    //校验位
+    com->setParity(QSerialPort::NoParity);
+    //停止位：1
+    com->setStopBits(QSerialPort::OneStop);
+
+    //关联串口和槽，当串口发出可读信号时，执行serialrx
+    connect(com,&QSerialPort::readyRead, this,&QWidgetEcgCom::serialRx);
+
+    return 0;
+
+}
+
+void QWidgetEcgCom::serialRx()
+{
+    //读串口数据并处理
+    while (!com->atEnd())
+    {
+        QByteArray data = this->com->read(1);//读一字节
+        this->rxDataHandle(data[0]);
+    }
+}
+
+void QWidgetEcgCom::rxDataHandle(char data)
+{
+    qDebug("%02X",data&0xFF);
+    return;
+}
+
+
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    MainWindow w;
+    //w.show();
+
+    QWidgetEcgCom *com = new QWidgetEcgCom();
+
+
+    return a.exec();
+}
